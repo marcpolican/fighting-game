@@ -1,0 +1,24 @@
+{
+  "name": "fighting-game",
+  "version": "1.0.0",
+  "description": "Online multiplayer fighting game that can be played on the browser",
+  "main": "server/lib/index.js",
+  "scripts": {
+    "compile-server": "npm install --prefix server && tsc -p server",
+    "compile-client": "npm install --prefix client && cd client && ./node_modules/.bin/webpack --env.production && cd -",
+    "install": "npm run compile-server && npm run compile-client",
+    "start": "node server/lib/index.js"
+  },
+  "engines": {
+    "node": "8.7.0"
+  },
+  "repository": {
+    "url": "git@github.com:endel/babylonjs-multiplayer-boilerplate.git",
+    "type": "git"
+  },
+  "author": "Marc Polican<pocanman@gmail.com>",
+  "license": "Apache 2.0",
+  "devDependencies": {
+    "typescript": "^3.9.3"
+  }
+}
