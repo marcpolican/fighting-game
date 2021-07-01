@@ -10,7 +10,11 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },
+  "types": [
+	  "babylonjs",
+	  "babylonjs-materials"
+  ],
   "include": [
-    "src/**/*.ts"
+		"src/**/*.ts"
   ]
 }

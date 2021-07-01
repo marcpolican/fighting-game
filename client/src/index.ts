@@ -2,6 +2,7 @@ import "./index.css";
 
 import * as BABYLON from "babylonjs";
 import 'babylonjs-loaders';
+import * as MATERIALS from 'babylonjs-materials';
 import Keycode from "keycode.js";
 
 import { client } from "./game/network";
@@ -39,8 +40,14 @@ var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0),
 // Default intensity is 1. Let's dim the light a small amount
 light.intensity = 0.7;
 
-// Our built-in 'ground' shape. Params: name, width, depth, subdivs, scene
-var ground = BABYLON.Mesh.CreateGround("ground1", 10, 10, 4, scene);
+var light2 = new BABYLON.DirectionalLight("DirectionalLight", new BABYLON.Vector3(0, -1, 0.5), scene);
+light2.position = new BABYLON.Vector3(0,20,0);
+light2.intensity = 0.5;
+
+var shadowGenerator = new BABYLON.ShadowGenerator(1024, light2);
+
+var ground = null;
+createGround();
 
 // Attach default camera mouse navigation
 // camera.attachControl(canvas);
@@ -157,6 +164,17 @@ function lerp(t:number, start:number, end:number) {
 	return start + (end - start) * t;
 }
 
+function createGround() {
+	var mat = new MATERIALS.GridMaterial("matGround", scene);
+	mat.mainColor = new BABYLON.Color3(0.7, 0.7, 0.7);
+	mat.lineColor = new BABYLON.Color3(0,0,0);
+
+	// Our built-in 'ground' shape. Params: name, width, depth, subdivs, scene
+	var ground = BABYLON.Mesh.CreateGround("ground1", 10, 10, 4, scene);
+	ground.receiveShadows = true;
+	ground.material = mat;
+}
+
 async function loadCharacter() : Promise<CharacterData> {
 	var result = await BABYLON.SceneLoader.ImportMeshAsync("", "", "fighting-char-stick.glb", scene);
 
@@ -169,6 +187,9 @@ async function loadCharacter() : Promise<CharacterData> {
 	var data = new CharacterData();
 	data.mesh = result.meshes[0] as BABYLON.Mesh;
 	data.animGroups = ag;
+
+	shadowGenerator.addShadowCaster(data.mesh);
+
 	return data;
 	//s.beginAnimation("Idle");
 }
