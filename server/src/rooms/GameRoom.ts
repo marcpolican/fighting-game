@@ -19,7 +19,7 @@ export class GameRoom extends Room<StateHandler> {
         const player = new Player();
         player.name = `Player ${ this.clients.length }`;
         player.id = this.clients.length;
-        player.position.x = player.id == 1 ? -2 : 2;
+        player.position.x = player.id == 1 ? -1 : 1;
         player.position.y = 0;
         player.position.z = 0;
 

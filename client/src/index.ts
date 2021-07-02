@@ -24,9 +24,9 @@ const engine = new BABYLON.Engine(canvas, true);
 var scene = new BABYLON.Scene(engine);
 
 // This creates and positions a free camera (non-mesh)
-var camera = new BABYLON.FollowCamera("camera1", new BABYLON.Vector3(0, 2, -10), scene);
+var camera = new BABYLON.FollowCamera("camera1", new BABYLON.Vector3(0, 1.5, -10), scene);
 
-camera.fov = 0.5;
+camera.fov = 0.4;
 
 // This targets the camera to scene origin
 camera.setTarget(new BABYLON.Vector3(0,1,0));
@@ -165,9 +165,12 @@ function lerp(t:number, start:number, end:number) {
 }
 
 function createGround() {
-	var mat = new MATERIALS.GridMaterial("matGround", scene);
-	mat.mainColor = new BABYLON.Color3(0.7, 0.7, 0.7);
-	mat.lineColor = new BABYLON.Color3(0,0,0);
+	//var mat = new MATERIALS.GridMaterial("matGround", scene);
+	//mat.mainColor = new BABYLON.Color3(0.7, 0.7, 0.7);
+	//mat.lineColor = new BABYLON.Color3(0,0,0);
+
+	var mat = new BABYLON.StandardMaterial("matGround", scene);
+	mat.diffuseColor = new BABYLON.Color3(0.8, 0.8, 0.8);
 
 	// Our built-in 'ground' shape. Params: name, width, depth, subdivs, scene
 	var ground = BABYLON.Mesh.CreateGround("ground1", 10, 10, 4, scene);
