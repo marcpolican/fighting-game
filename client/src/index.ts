@@ -17,47 +17,71 @@ export class CharacterData {
     animGroups: BABYLON.AnimationGroup[] = [];
 }
 
-const canvas = document.getElementById('game') as HTMLCanvasElement;
-const engine = new BABYLON.Engine(canvas, true);
-
-// This creates a basic Babylon Scene object (non-mesh)
-var scene = new BABYLON.Scene(engine);
-
-// This creates and positions a free camera (non-mesh)
-var camera = new BABYLON.FollowCamera("camera1", new BABYLON.Vector3(0, 1.5, -10), scene);
-
-camera.fov = 0.4;
-
-// This targets the camera to scene origin
-camera.setTarget(new BABYLON.Vector3(0,1,0));
-
-// This attaches the camera to the canvas
-//camera.attachControl(canvas, true);
-
-// This creates a light, aiming 0,1,0 - to the sky (non-mesh)
-var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
-
-// Default intensity is 1. Let's dim the light a small amount
-light.intensity = 0.7;
-
-var light2 = new BABYLON.DirectionalLight("DirectionalLight", new BABYLON.Vector3(0, -1, 0.5), scene);
-light2.position = new BABYLON.Vector3(0,20,0);
-light2.intensity = 0.5;
-
-var shadowGenerator = new BABYLON.ShadowGenerator(1024, light2);
-
-var ground = null;
-createGround();
-
-// Attach default camera mouse navigation
-// camera.attachControl(canvas);
-
+var canvas;
+var engine;
+var scene;
+var camera;
+var ground;
+var shadowGenerator;
 var authPos = {};
+
 const playerViews: {[id: string]: BABYLON.Mesh} = {};
 const playerAnims: {[id: string]: BABYLON.AnimationGroup[]} = {};
 
-//loadCharacter();
+function main() {
+	initEngine();
+	initCamera();
+	initLights();
+	initGround();
+	initColyseus();
+}
 
+function initEngine() {
+	canvas = document.getElementById('game') as HTMLCanvasElement;
+	engine = new BABYLON.Engine(canvas, true);
+	scene = new BABYLON.Scene(engine);
+	scene.debugLayer.show();
+
+	engine.runRenderLoop(update);
+}
+
+function initCamera() {
+	// This creates and positions a free camera (non-mesh)
+	camera = new BABYLON.FollowCamera("camera1", new BABYLON.Vector3(0, 1.5, -10), scene);
+	camera.fov = 0.4;
+	camera.setTarget(new BABYLON.Vector3(0,1,0));
+
+	// This attaches the camera to the canvas
+	//camera.attachControl(canvas, true);
+}
+
+function initLights() {
+	var light = new BABYLON.HemisphericLight("light1Hemi", new BABYLON.Vector3(0, 1, 0), scene);
+	light.intensity = 0.7;
+
+	// 2nd light for shadows
+	var light2 = new BABYLON.DirectionalLight("light2Dir", new BABYLON.Vector3(0, -1, 0.5), scene);
+	light2.position = new BABYLON.Vector3(0,20,0);
+	light2.intensity = 0.5;
+
+	shadowGenerator = new BABYLON.ShadowGenerator(1024, light2);
+}
+
+function initGround() {
+	//var mat = new MATERIALS.GridMaterial("matGround", scene);
+	//mat.mainColor = new BABYLON.Color3(0.7, 0.7, 0.7);
+	//mat.lineColor = new BABYLON.Color3(0,0,0);
+
+	var mat = new BABYLON.StandardMaterial("matGround", scene);
+	mat.diffuseColor = new BABYLON.Color3(0.8, 0.8, 0.8);
+
+	// Our built-in 'ground' shape. Params: name, width, depth, subdivs, scene
+	var ground = BABYLON.Mesh.CreateGround("ground1", 10, 10, 4, scene);
+	ground.receiveShadows = true;
+	ground.material = mat;
+}
+
+function initColyseus() {
 // Colyseus / Join Room
 client.joinOrCreate<StateHandler>("game").then(room => {
 
@@ -93,11 +117,10 @@ client.joinOrCreate<StateHandler>("game").then(room => {
 		player.onChange = (changes) => {
 			console.log("player.onChange", changes);
 			if (player.state == 1) {
-				playerAnims[key][0].play();
+				playerAnims[key][3].play();
 				//console.log("PUNCH");
 			}
 		};
-
     };
 
     room.state.players.onRemove = function(player, key) {
@@ -145,10 +168,9 @@ client.joinOrCreate<StateHandler>("game").then(room => {
         engine.resize();
     });
 });
+}
 
-// Scene render loop
-engine.runRenderLoop(function() {
-
+function update() {
 	// interpolate
 	for (let k in playerViews) {
 		let curr = playerViews[k].position;
@@ -156,26 +178,7 @@ engine.runRenderLoop(function() {
 
 		playerViews[k].position = BABYLON.Vector3.Lerp(curr, target, 0.05);
 	}
-
     scene.render();
-});
-
-function lerp(t:number, start:number, end:number) {
-	return start + (end - start) * t;
-}
-
-function createGround() {
-	//var mat = new MATERIALS.GridMaterial("matGround", scene);
-	//mat.mainColor = new BABYLON.Color3(0.7, 0.7, 0.7);
-	//mat.lineColor = new BABYLON.Color3(0,0,0);
-
-	var mat = new BABYLON.StandardMaterial("matGround", scene);
-	mat.diffuseColor = new BABYLON.Color3(0.8, 0.8, 0.8);
-
-	// Our built-in 'ground' shape. Params: name, width, depth, subdivs, scene
-	var ground = BABYLON.Mesh.CreateGround("ground1", 10, 10, 4, scene);
-	ground.receiveShadows = true;
-	ground.material = mat;
 }
 
 async function loadCharacter() : Promise<CharacterData> {
@@ -184,15 +187,16 @@ async function loadCharacter() : Promise<CharacterData> {
 	console.log(result);
 	var s = result.skeletons[0];
 	var ag = result.animationGroups;
-	ag[1].play(true);
-	ag[0].stop();
+	ag[2].play(true);
+	//ag[0].stop();
 
 	var data = new CharacterData();
 	data.mesh = result.meshes[0] as BABYLON.Mesh;
 	data.animGroups = ag;
 
 	shadowGenerator.addShadowCaster(data.mesh);
-
 	return data;
-	//s.beginAnimation("Idle");
 }
+
+//------------------------------------------------------------------------------
+main();
