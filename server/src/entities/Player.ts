@@ -21,3 +21,33 @@ export class Player extends Schema {
 
 	pressedKeys: PressedKeys = { x: 0, y: 0, a:0, b:0 };
 }
+
+export enum CharState {
+	Idle,
+	Crouch,
+	CrouchLoop,
+	JumpUp,
+	JumpLoop,
+	JumpFall,
+	LowAttack,
+	HighAttack,
+}
+
+export class StateAnim {
+	state: CharState;
+	anim: string;
+
+	constructor(s: CharState, a: string) {
+		this.state = s;
+		this.anim = a;
+	}
+}
+
+export var Char01States: StateAnim[] = [
+	new StateAnim(CharState.Idle,       "Idle"),
+	new StateAnim(CharState.Crouch,     "Crouch"),
+	new StateAnim(CharState.CrouchLoop, "CrouchLoop"),
+	new StateAnim(CharState.JumpUp,     "Jump"),
+	new StateAnim(CharState.LowAttack,  "LowAttack"),
+	new StateAnim(CharState.HighAttack, "HighAttack"),
+];

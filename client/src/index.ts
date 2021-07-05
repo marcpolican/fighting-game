@@ -10,7 +10,7 @@ import { client } from "./game/network";
 // Re-using server-side types for networking
 // This is optional, but highly recommended
 import { StateHandler } from "../../server/src/rooms/StateHandler";
-import { PressedKeys } from "../../server/src/entities/Player";
+import * as PLAYER from "../../server/src/entities/Player";
 
 export class CharacterData {
     mesh: BABYLON.Mesh = null;;
@@ -40,7 +40,7 @@ function initEngine() {
 	canvas = document.getElementById('game') as HTMLCanvasElement;
 	engine = new BABYLON.Engine(canvas, true);
 	scene = new BABYLON.Scene(engine);
-	scene.debugLayer.show();
+	//scene.debugLayer.show();
 
 	engine.runRenderLoop(update);
 }
@@ -115,10 +115,22 @@ client.joinOrCreate<StateHandler>("game").then(room => {
         };
 
 		player.onChange = (changes) => {
+
 			console.log("player.onChange", changes);
-			if (player.state == 1) {
-				playerAnims[key][3].play();
-				//console.log("PUNCH");
+			if (changes[0].field == "state" && player.state != 0) {
+
+				var state = player.state;
+
+				for (var s of PLAYER.Char01States) {
+					if (state == s.state) {
+						var anim = playerAnims[key].find(a => a.name == s.anim);
+						if (anim != null) {
+							anim.play();
+						} else {
+							console.warn("Cannot find anim", s.anim);
+						}
+					}
+				}
 			}
 		};
     };
@@ -132,33 +144,37 @@ client.joinOrCreate<StateHandler>("game").then(room => {
     });
 
     // Keyboard listeners
-    const keyboard: PressedKeys = { x: 0, y: 0, a: 0, b: 0 };
+    const keyboard: PLAYER.PressedKeys = { x: 0, y: 0, a: 0, b: 0 };
     window.addEventListener("keydown", function(e) {
-        if (e.which === Keycode.LEFT) {
+        if (e.which === Keycode.A) {
             keyboard.x = -1;
-        } else if (e.which === Keycode.RIGHT) {
+        } else if (e.which === Keycode.D) {
             keyboard.x = 1;
-        } else if (e.which === Keycode.UP) {
+        } else if (e.which === Keycode.W) {
             keyboard.y = -1;
-        } else if (e.which === Keycode.DOWN) {
+        } else if (e.which === Keycode.S) {
             keyboard.y = 1;
-        } else if (e.which === Keycode.SPACE) {
+        } else if (e.which === Keycode.PERIOD) {
             keyboard.a = 1;
+        } else if (e.which === Keycode.FORWARDSLASH) {
+            keyboard.b = 1;
         }
         room.send('key', keyboard);
     });
 
     window.addEventListener("keyup", function(e) {
-        if (e.which === Keycode.LEFT) {
+        if (e.which === Keycode.A) {
             keyboard.x = 0;
-        } else if (e.which === Keycode.RIGHT) {
+        } else if (e.which === Keycode.D) {
             keyboard.x = 0;
-        } else if (e.which === Keycode.UP) {
+        } else if (e.which === Keycode.W) {
             keyboard.y = 0;
-        } else if (e.which === Keycode.DOWN) {
+        } else if (e.which === Keycode.S) {
             keyboard.y = 0;
-        } else if (e.which === Keycode.SPACE) {
+        } else if (e.which === Keycode.PERIOD) {
             keyboard.a = 0;
+        } else if (e.which === Keycode.FORWARDSLASH) {
+            keyboard.b = 0;
         }
         room.send('key', keyboard);
     });
@@ -187,8 +203,11 @@ async function loadCharacter() : Promise<CharacterData> {
 	console.log(result);
 	var s = result.skeletons[0];
 	var ag = result.animationGroups;
-	ag[2].play(true);
-	//ag[0].stop();
+	ag[0].stop();
+
+	var animIdle = ag.find(anim => anim.name == "Idle");
+	if (animIdle != null)
+		animIdle.play(true);
 
 	var data = new CharacterData();
 	data.mesh = result.meshes[0] as BABYLON.Mesh;
