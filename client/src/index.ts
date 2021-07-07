@@ -1,6 +1,7 @@
 import "./index.css";
 
 import * as BABYLON from "babylonjs";
+import * as GUI from "babylonjs-gui";
 import 'babylonjs-loaders';
 import * as MATERIALS from 'babylonjs-materials';
 import Keycode from "keycode.js";
@@ -33,6 +34,7 @@ function main() {
 	initCamera();
 	initLights();
 	initGround();
+	initUI();
 	initColyseus();
 }
 
@@ -68,10 +70,6 @@ function initLights() {
 }
 
 function initGround() {
-	//var mat = new MATERIALS.GridMaterial("matGround", scene);
-	//mat.mainColor = new BABYLON.Color3(0.7, 0.7, 0.7);
-	//mat.lineColor = new BABYLON.Color3(0,0,0);
-
 	var mat = new BABYLON.StandardMaterial("matGround", scene);
 	mat.diffuseColor = new BABYLON.Color3(0.8, 0.8, 0.8);
 
@@ -79,6 +77,23 @@ function initGround() {
 	var ground = BABYLON.Mesh.CreateGround("ground1", 10, 10, 4, scene);
 	ground.receiveShadows = true;
 	ground.material = mat;
+}
+
+function initUI() {
+	var advancedTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI( "myUI");
+
+	var rect = new GUI.Rectangle();
+	advancedTexture.addControl(rect);
+
+	rect.height = "40px";
+	rect.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
+
+	var text1 = new GUI.TextBlock();
+    rect.addControl(text1);
+
+    text1.text = "[Controls]  Move: W, S, A, D    Low punch: >    High punch: ? "
+    text1.color = "white";
+    text1.fontSize = 24;
 }
 
 function initColyseus() {
@@ -93,7 +108,7 @@ client.joinOrCreate<StateHandler>("game").then(room => {
 
         // Our built-in 'sphere' shape. Params: name, subdivs, size, scene
         //playerViews[key] = BABYLON.Mesh.CreateSphere("sphere1", 16, 2, scene);
-		var characterData = await loadCharacter();
+		var characterData = await loadCharacter(key);
 		playerViews[key] = characterData.mesh;
 		playerAnims[key] = characterData.animGroups;
 
@@ -103,7 +118,7 @@ client.joinOrCreate<StateHandler>("game").then(room => {
 		console.log(playerViews[key].scaling);
 
 		if (player.id == 2)
-			playerViews[key].scaling.set(-1,1,-1);
+			playerViews[key].scaling.set(-1, 1,-1);
 
         playerViews[key].position.set(player.position.x, player.position.y, player.position.z);
 
@@ -116,7 +131,7 @@ client.joinOrCreate<StateHandler>("game").then(room => {
 
 		player.onChange = (changes) => {
 
-			console.log("player.onChange", changes);
+			//console.log("player.onChange", changes);
 			if (changes[0].field == "state" && player.state != 0) {
 
 				var state = player.state;
@@ -140,8 +155,7 @@ client.joinOrCreate<StateHandler>("game").then(room => {
         delete playerViews[key];
     };
 
-    room.onStateChange((state) => {
-    });
+    room.onStateChange((state) => { });
 
     // Keyboard listeners
     const keyboard: PLAYER.PressedKeys = { x: 0, y: 0, a: 0, b: 0 };
@@ -197,10 +211,10 @@ function update() {
     scene.render();
 }
 
-async function loadCharacter() : Promise<CharacterData> {
+async function loadCharacter(key) : Promise<CharacterData> {
+
 	var result = await BABYLON.SceneLoader.ImportMeshAsync("", "", "fighting-char-stick.glb", scene);
 
-	console.log(result);
 	var s = result.skeletons[0];
 	var ag = result.animationGroups;
 	ag[0].stop();
@@ -211,7 +225,17 @@ async function loadCharacter() : Promise<CharacterData> {
 
 	var data = new CharacterData();
 	data.mesh = result.meshes[0] as BABYLON.Mesh;
+	data.mesh.material = material;
 	data.animGroups = ag;
+
+	// assign random color to mesh
+	var material = new BABYLON.StandardMaterial("mat" + key, scene);
+	material.diffuseColor = BABYLON.Color3.Random();
+
+	var meshes = data.mesh.getChildMeshes(false, (node) => { return (node.name == "Mesh") } );
+	if (meshes.length > 0) {
+		meshes[0].material = material;
+	}
 
 	shadowGenerator.addShadowCaster(data.mesh);
 	return data;
