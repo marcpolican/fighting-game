@@ -1,22 +1,23 @@
 {
-  "name": "fighting-game",
+  "name": "babylonjs-colyseus",
   "version": "1.0.0",
-  "description": "Online multiplayer fighting game that can be played on the browser",
+  "description": "Boilerplate intended to be used for the BabylonJS 2.5 Challenge",
   "main": "server/lib/index.js",
   "scripts": {
     "compile-server": "npm install --prefix server && tsc -p server",
-    "compile-client": "npm install --prefix client && cd client && ./node_modules/.bin/webpack --env.production && cd -",
+    "compile-client": "cd client && npm install && npm run build && cd -",
     "install": "npm run compile-server && npm run compile-client",
     "start": "node server/lib/index.js"
   },
   "engines": {
-    "node": "8.7.0"
+    "node": "16.4.2",
+    "npm": "7.18.1"
   },
   "repository": {
     "url": "git@github.com:endel/babylonjs-multiplayer-boilerplate.git",
     "type": "git"
   },
-  "author": "Marc Polican<pocanman@gmail.com>",
+  "author": "Endel Dreyer <endel.dreyer@gmail.com>",
   "license": "Apache 2.0",
   "devDependencies": {
     "typescript": "^3.9.3"
