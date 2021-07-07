@@ -102,6 +102,9 @@ client.joinOrCreate<StateHandler>("game").then(room => {
 
     room.state.players.onAdd = async function(player, key) {
 
+		const scaleFaceLeft = new BABYLON.Vector3(-1, 1, -1);
+		const scaleFaceRight = new BABYLON.Vector3(1, 1, -1);
+
 		console.log("added player", player, key);
 
 		authPos[key] = new BABYLON.Vector3();
@@ -118,15 +121,18 @@ client.joinOrCreate<StateHandler>("game").then(room => {
 		console.log(playerViews[key].scaling);
 
 		if (player.id == 2)
-			playerViews[key].scaling.set(-1, 1,-1);
+			playerViews[key].scaling = scaleFaceLeft;
 
         playerViews[key].position.set(player.position.x, player.position.y, player.position.z);
-
 
         // Update player position based on changes from the server.
         player.position.onChange = () => {
 			authPos[key].set(player.position.x, player.position.y, player.position.z);
 
+			if (playerViews[key].position.x > player.position.x)
+				playerViews[key].scaling = scaleFaceLeft;
+			else if (playerViews[key].position.x < player.position.x)
+				playerViews[key].scaling = scaleFaceRight;
         };
 
 		player.onChange = (changes) => {
